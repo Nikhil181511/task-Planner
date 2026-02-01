@@ -3,17 +3,18 @@ import { Note, noteService } from "@/services/noteService";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { colors } from "../constants/colors";
 
 export default function NotesScreen() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -123,7 +124,7 @@ export default function NotesScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -138,7 +139,11 @@ export default function NotesScreen() {
       >
         {notes.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="document-text-outline" size={64} color="#ccc" />
+            <Ionicons
+              name="document-text-outline"
+              size={64}
+              color={colors.textTertiary}
+            />
             <Text style={styles.emptyText}>No notes yet</Text>
             <Text style={styles.emptySubtext}>
               Tap the + button to create your first note
@@ -161,7 +166,11 @@ export default function NotesScreen() {
                     onPress={() => handleDeleteNote(note)}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
-                    <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+                    <Ionicons
+                      name="trash-outline"
+                      size={20}
+                      color={colors.danger}
+                    />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.noteContent} numberOfLines={4}>
@@ -174,7 +183,7 @@ export default function NotesScreen() {
       </ScrollView>
 
       <TouchableOpacity style={styles.fab} onPress={handleNewNote}>
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={colors.background} />
       </TouchableOpacity>
 
       <Modal
@@ -217,7 +226,7 @@ export default function NotesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.background,
   },
   centered: {
     flex: 1,
@@ -236,12 +245,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#666",
+    color: colors.textSecondary,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: "#999",
+    color: colors.textTertiary,
     marginTop: 8,
     textAlign: "center",
   },
@@ -249,15 +258,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   noteCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   noteHeader: {
     flexDirection: "row",
@@ -267,11 +273,11 @@ const styles = StyleSheet.create({
   },
   noteDate: {
     fontSize: 12,
-    color: "#999",
+    color: colors.textTertiary,
   },
   noteContent: {
     fontSize: 16,
-    color: "#333",
+    color: colors.text,
     lineHeight: 22,
   },
   fab: {
@@ -281,18 +287,13 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   modalHeader: {
     flexDirection: "row",
@@ -300,21 +301,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: colors.border,
     paddingTop: 60,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
+    color: colors.text,
   },
   cancelButton: {
     fontSize: 16,
-    color: "#007AFF",
+    color: colors.primary,
   },
   saveButton: {
     fontSize: 16,
-    color: "#007AFF",
+    color: colors.primary,
     fontWeight: "600",
   },
   saveButtonDisabled: {
@@ -325,5 +326,6 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     lineHeight: 24,
+    color: colors.text,
   },
 });

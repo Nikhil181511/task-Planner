@@ -37,12 +37,12 @@ if (getApps().length === 0) {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
   });
-  console.log("Firebase initialized with AsyncStorage persistence");
+  console.log("✅ Firebase initialized with AsyncStorage persistence");
 } else {
-  // Already initialized (hot reload)
+  // Already initialized (hot reload or module re-import)
   app = getApp();
   auth = getAuth(app);
-  console.log("Firebase already initialized, reusing existing instance");
+  // Remove repetitive log to reduce noise
 }
 
 // Initialize Firestore

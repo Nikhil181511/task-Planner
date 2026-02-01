@@ -20,12 +20,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Setting up auth state listener...");
+
     const unsubscribe = authService.onAuthStateChanged((user) => {
+      console.log(
+        "Auth state changed:",
+        user ? `User: ${user.email || user.uid}` : "No user",
+      );
       setUser(user);
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      console.log("Cleaning up auth state listener");
+      unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {

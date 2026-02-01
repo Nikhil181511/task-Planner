@@ -15,6 +15,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { colors } from "../constants/colors";
 
 export default function TasksScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -137,13 +138,13 @@ export default function TasksScreen() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "High":
-        return "#FF3B30";
+        return colors.priorityHigh;
       case "Medium":
-        return "#FF9500";
+        return colors.priorityMedium;
       case "Low":
-        return "#34C759";
+        return colors.priorityLow;
       default:
-        return "#999";
+        return colors.textTertiary;
     }
   };
 
@@ -153,7 +154,7 @@ export default function TasksScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -187,12 +188,20 @@ export default function TasksScreen() {
       <ScrollView
         style={styles.scrollView}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
         }
       >
         {filteredTasks.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="checkmark-circle-outline" size={64} color="#ccc" />
+            <Ionicons
+              name="clipboard-outline"
+              size={64}
+              color={colors.textTertiary}
+            />
             <Text style={styles.emptyText}>No tasks found</Text>
             <Text style={styles.emptySubtext}>
               {filter === "completed"
@@ -215,7 +224,7 @@ export default function TasksScreen() {
                         task.completed ? "checkmark-circle" : "ellipse-outline"
                       }
                       size={28}
-                      color={task.completed ? "#34C759" : "#007AFF"}
+                      color={task.completed ? colors.success : colors.text}
                     />
                   </TouchableOpacity>
                   <View style={styles.taskContent}>
@@ -237,7 +246,11 @@ export default function TasksScreen() {
                         <Text style={styles.priorityText}>{task.priority}</Text>
                       </View>
                       <View style={styles.metaItem}>
-                        <Ionicons name="time-outline" size={14} color="#666" />
+                        <Ionicons
+                          name="time-outline"
+                          size={14}
+                          color={colors.textSecondary}
+                        />
                         <Text style={styles.metaText}>
                           {task.estimatedTime}
                         </Text>
@@ -259,7 +272,7 @@ export default function TasksScreen() {
         style={styles.fab}
         onPress={() => setShowAddModal(true)}
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={colors.background} />
       </TouchableOpacity>
 
       {/* Add Task Modal */}
@@ -274,7 +287,7 @@ export default function TasksScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add New Task</Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <Ionicons name="close" size={28} color="#666" />
+                <Ionicons name="close" size={28} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -283,6 +296,7 @@ export default function TasksScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g., Complete project report"
+                placeholderTextColor={colors.textTertiary}
                 value={newTask.title}
                 onChangeText={(text) => setNewTask({ ...newTask, title: text })}
               />
@@ -317,6 +331,7 @@ export default function TasksScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g., 2 hours, 30 mins"
+                placeholderTextColor={colors.textTertiary}
                 value={newTask.estimatedTime}
                 onChangeText={(text) =>
                   setNewTask({ ...newTask, estimatedTime: text })
@@ -327,6 +342,7 @@ export default function TasksScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.textTertiary}
                 value={newTask.scheduledFor}
                 onChangeText={(text) =>
                   setNewTask({ ...newTask, scheduledFor: text })
@@ -337,6 +353,7 @@ export default function TasksScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Additional notes..."
+                placeholderTextColor={colors.textTertiary}
                 value={newTask.notes}
                 onChangeText={(text) => setNewTask({ ...newTask, notes: text })}
                 multiline
@@ -347,6 +364,11 @@ export default function TasksScreen() {
                 style={styles.saveButton}
                 onPress={handleAddTask}
               >
+                <Ionicons
+                  name="checkmark"
+                  size={20}
+                  color={colors.background}
+                />
                 <Text style={styles.saveButtonText}>Create Task</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -360,55 +382,59 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.background,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: colors.background,
   },
   filterContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: colors.border,
   },
   filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 8,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   filterButtonActive: {
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: colors.textSecondary,
   },
   filterTextActive: {
-    color: "#fff",
+    color: colors.background,
   },
   scrollView: {
     flex: 1,
   },
   emptyContainer: {
-    padding: 40,
+    padding: 60,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#666",
+    color: colors.text,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: "#999",
+    color: colors.textSecondary,
     marginTop: 8,
     textAlign: "center",
   },
@@ -416,26 +442,25 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   dateHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textSecondary,
     marginLeft: 16,
     marginTop: 16,
     marginBottom: 8,
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   taskCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginBottom: 8,
     padding: 16,
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "flex-start",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   checkboxContainer: {
     marginRight: 12,
@@ -447,12 +472,12 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: colors.text,
     marginBottom: 8,
   },
   taskTitleCompleted: {
     textDecorationLine: "line-through",
-    color: "#999",
+    color: colors.textTertiary,
   },
   taskMeta: {
     flexDirection: "row",
@@ -465,9 +490,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   priorityText: {
-    color: "#fff",
+    color: colors.background,
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   metaItem: {
     flexDirection: "row",
@@ -476,13 +501,12 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: "#666",
+    color: colors.textSecondary,
   },
   taskNotes: {
     fontSize: 13,
-    color: "#999",
+    color: colors.textSecondary,
     marginTop: 8,
-    fontStyle: "italic",
   },
   fab: {
     position: "absolute",
@@ -491,22 +515,22 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
     elevation: 8,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: colors.overlay,
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: "90%",
@@ -518,33 +542,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#333",
+    color: colors.text,
   },
   modalForm: {
     padding: 20,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.textSecondary,
     marginBottom: 8,
     marginTop: 16,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   input: {
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: colors.border,
+    color: colors.text,
   },
   textArea: {
-    minHeight: 80,
+    minHeight: 100,
     textAlignVertical: "top",
   },
   priorityButtons: {
@@ -554,28 +581,31 @@ const styles = StyleSheet.create({
   priorityButton: {
     flex: 1,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 2,
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surfaceLight,
   },
   priorityButtonActive: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.surface,
   },
   priorityButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: colors.textSecondary,
   },
   saveButton: {
-    backgroundColor: "#007AFF",
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: colors.primary,
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 24,
   },
   saveButtonText: {
-    color: "#fff",
+    color: colors.background,
     fontSize: 16,
     fontWeight: "600",
   },

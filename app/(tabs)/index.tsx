@@ -3,13 +3,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { colors } from "../../constants/colors";
 
 export default function HomeScreen() {
   const { user, logout, loading } = useAuth();
@@ -47,11 +48,11 @@ export default function HomeScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Welcome back!</Text>
-          <Text style={styles.email}>{user.email || "Anonymous User"}</Text>
+          <Text style={styles.greeting}>Welcome Back</Text>
+          <Text style={styles.email}>{user.email || "Guest User"}</Text>
         </View>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
+          <Ionicons name="log-out-outline" size={24} color={colors.error} />
         </TouchableOpacity>
       </View>
 
@@ -63,39 +64,43 @@ export default function HomeScreen() {
           onPress={() => router.push("/ai-planner")}
         >
           <View style={styles.cardIcon}>
-            <Ionicons name="sparkles" size={32} color="#fff" />
+            <Ionicons name="bulb-outline" size={32} color={colors.background} />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>AI Task Planner</Text>
             <Text style={styles.cardDescription}>
-              Convert messy ideas into structured tasks
+              Transform ideas into structured tasks
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={24} color="#fff" />
+          <Ionicons name="arrow-forward" size={24} color={colors.background} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.card}
           onPress={() => router.push("/tasks")}
         >
-          <View style={[styles.cardIcon, styles.secondaryIcon]}>
-            <Ionicons name="checkmark-circle" size={32} color="#007AFF" />
+          <View style={styles.cardIcon}>
+            <Ionicons name="list-outline" size={32} color={colors.text} />
           </View>
           <View style={styles.cardContent}>
-            <Text style={styles.secondaryCardTitle}>My Tasks</Text>
-            <Text style={[styles.cardDescription, styles.secondaryDescription]}>
-              View and manage your planned tasks
+            <Text style={styles.cardTitle}>My Tasks</Text>
+            <Text style={styles.cardDescription}>
+              Manage your planned tasks
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={24} color="#007AFF" />
+          <Ionicons name="arrow-forward" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.card}
           onPress={() => router.push("/notes")}
         >
-          <View style={[styles.cardIcon, styles.secondaryIcon]}>
-            <Ionicons name="document-text" size={32} color="#007AFF" />
+          <View style={styles.cardIcon}>
+            <Ionicons
+              name="document-text-outline"
+              size={32}
+              color={colors.text}
+            />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.secondaryCardTitle}>Quick Notes</Text>
@@ -103,7 +108,7 @@ export default function HomeScreen() {
               Save quick thoughts and ideas
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={24} color="#007AFF" />
+          <Ionicons name="chevron-forward" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -113,26 +118,27 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     padding: 20,
     paddingTop: 60,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: colors.border,
   },
   greeting: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "700",
+    color: colors.text,
+    letterSpacing: 0.3,
   },
   email: {
     fontSize: 14,
-    color: "#666",
+    color: colors.textSecondary,
     marginTop: 4,
   },
   logoutButton: {
@@ -142,59 +148,47 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
     marginBottom: 16,
-    color: "#333",
+    color: colors.textSecondary,
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   primaryCard: {
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   cardIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.surfaceLight,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
-  },
-  secondaryIcon: {
-    backgroundColor: "rgba(0,122,255,0.1)",
   },
   cardContent: {
     flex: 1,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
-    marginBottom: 4,
-  },
-  secondaryCardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
+    color: colors.text,
     marginBottom: 4,
   },
   cardDescription: {
     fontSize: 14,
-    color: "rgba(255,255,255,0.8)",
-  },
-  secondaryDescription: {
-    color: "#666",
+    color: colors.textSecondary,
   },
 });

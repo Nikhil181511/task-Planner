@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -11,6 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { colors } from "../constants/colors";
 import { useAuth } from "../context/AuthContext";
 
 export default function AuthScreen() {
@@ -18,8 +20,16 @@ export default function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, register, loginAnonymously } = useAuth();
+  const { user, login, register, loginAnonymously } = useAuth();
   const router = useRouter();
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      console.log("User already logged in, redirecting to dashboard...");
+      router.replace("/(tabs)");
+    }
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -60,29 +70,48 @@ export default function AuthScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>SmartPlan AI</Text>
-        <Text style={styles.subtitle}>
-          Your Personal Productivity Assistant
-        </Text>
+        <View style={styles.header}>
+          <Ionicons name="calendar-outline" size={48} color={colors.text} />
+          <Text style={styles.title}>SmartPlan AI</Text>
+          <Text style={styles.subtitle}>Intelligent Task Management</Text>
+        </View>
 
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            editable={!loading}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.textSecondary}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              editable={!loading}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={colors.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              editable={!loading}
+            />
+          </View>
 
           <TouchableOpacity
             style={[styles.button, styles.primaryButton]}
@@ -90,11 +119,18 @@ export default function AuthScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.background} />
             ) : (
-              <Text style={styles.buttonText}>
-                {isLogin ? "Login" : "Register"}
-              </Text>
+              <>
+                <Ionicons
+                  name={isLogin ? "log-in-outline" : "person-add-outline"}
+                  size={20}
+                  color={colors.background}
+                />
+                <Text style={styles.buttonText}>
+                  {isLogin ? "Sign In" : "Create Account"}
+                </Text>
+              </>
             )}
           </TouchableOpacity>
 
@@ -105,8 +141,8 @@ export default function AuthScreen() {
           >
             <Text style={styles.switchText}>
               {isLogin
-                ? "Don't have an account? Register"
-                : "Already have an account? Login"}
+                ? "New user? Create account"
+                : "Have an account? Sign in"}
             </Text>
           </TouchableOpacity>
 
@@ -121,7 +157,8 @@ export default function AuthScreen() {
             onPress={handleAnonymousLogin}
             disabled={loading}
           >
-            <Text style={styles.secondaryButtonText}>Continue Anonymously</Text>
+            <Ionicons name="person-outline" size={20} color={colors.text} />
+            <Text style={styles.secondaryButtonText}>Guest Access</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -132,83 +169,104 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
     justifyContent: "center",
-    padding: 20,
+    padding: 24,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 48,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "700",
     textAlign: "center",
+    marginTop: 16,
     marginBottom: 8,
-    color: "#333",
+    color: colors.text,
+    letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
-    marginBottom: 40,
-    color: "#666",
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
   },
   form: {
     width: "100%",
   },
-  input: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-    fontSize: 16,
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: colors.border,
+  },
+  inputIcon: {
+    paddingLeft: 16,
+  },
+  input: {
+    flex: 1,
+    padding: 16,
+    fontSize: 16,
+    color: colors.text,
   },
   button: {
+    flexDirection: "row",
+    gap: 8,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
   },
   primaryButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary,
   },
   secondaryButton: {
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#007AFF",
+    borderColor: colors.border,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.background,
     fontSize: 16,
     fontWeight: "600",
+    letterSpacing: 0.3,
   },
   secondaryButtonText: {
-    color: "#007AFF",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
+    letterSpacing: 0.3,
   },
   switchButton: {
-    marginTop: 16,
+    marginTop: 20,
     alignItems: "center",
   },
   switchText: {
-    color: "#007AFF",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 24,
+    marginVertical: 32,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#ddd",
+    backgroundColor: colors.border,
   },
   dividerText: {
     marginHorizontal: 16,
-    color: "#999",
-    fontSize: 14,
+    color: colors.textTertiary,
+    fontSize: 12,
+    letterSpacing: 1,
   },
 });

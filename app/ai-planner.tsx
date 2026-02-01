@@ -5,17 +5,18 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { colors } from "../constants/colors";
 
 export default function AIPlanner() {
   const [input, setInput] = useState("");
@@ -133,10 +134,14 @@ export default function AIPlanner() {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.background} />
               ) : (
                 <>
-                  <Ionicons name="sparkles" size={20} color="#fff" />
+                  <Ionicons
+                    name="sparkles"
+                    size={20}
+                    color={colors.background}
+                  />
                   <Text style={styles.buttonText}>Analyze with AI</Text>
                 </>
               )}
@@ -150,7 +155,7 @@ export default function AIPlanner() {
             {plan.conflicts && plan.conflicts.length > 0 && (
               <View style={styles.conflictsBox}>
                 <View style={styles.conflictHeader}>
-                  <Ionicons name="warning" size={20} color="#FF9500" />
+                  <Ionicons name="warning" size={20} color={colors.warning} />
                   <Text style={styles.conflictTitle}>Scheduling Conflicts</Text>
                 </View>
                 {plan.conflicts.map((conflict, idx) => (
@@ -234,7 +239,7 @@ export default function AIPlanner() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -244,29 +249,31 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 8,
-    color: "#333",
+    color: colors.text,
+    letterSpacing: 0.3,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 14,
+    color: colors.textSecondary,
     marginBottom: 20,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   textArea: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: colors.border,
     minHeight: 200,
     marginBottom: 16,
+    color: colors.text,
   },
   button: {
     flexDirection: "row",
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary,
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
@@ -277,7 +284,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.background,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -286,15 +293,15 @@ const styles = StyleSheet.create({
   },
   planTitle: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 12,
-    color: "#333",
+    color: colors.text,
   },
   overview: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 14,
+    color: colors.textSecondary,
     marginBottom: 24,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   tasksHeader: {
     flexDirection: "row",
@@ -303,17 +310,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   tasksTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textSecondary,
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   taskCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: colors.border,
   },
   taskHeader: {
     flexDirection: "row",
@@ -329,13 +338,13 @@ const styles = StyleSheet.create({
   taskNumber: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666",
+    color: colors.textSecondary,
     marginRight: 8,
   },
   taskTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: colors.text,
     flex: 1,
   },
   priorityBadge: {
@@ -344,9 +353,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   priorityText: {
-    color: "#fff",
+    color: colors.background,
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   taskDetails: {
     flexDirection: "row",
@@ -360,21 +369,20 @@ const styles = StyleSheet.create({
   },
   taskDetailText: {
     fontSize: 14,
-    color: "#666",
+    color: colors.textSecondary,
   },
   taskNotes: {
     fontSize: 14,
-    color: "#999",
-    fontStyle: "italic",
+    color: colors.textSecondary,
     marginTop: 8,
   },
   conflictsBox: {
-    backgroundColor: "#FFF9E6",
+    backgroundColor: "rgba(255, 214, 10, 0.1)",
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#FFD60A",
+    borderColor: colors.warning,
   },
   conflictHeader: {
     flexDirection: "row",
@@ -385,11 +393,11 @@ const styles = StyleSheet.create({
   conflictTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FF9500",
+    color: colors.warning,
   },
   conflictText: {
     fontSize: 14,
-    color: "#666",
+    color: colors.text,
     marginBottom: 6,
     lineHeight: 20,
   },
@@ -403,12 +411,12 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#007AFF",
+    borderColor: colors.border,
   },
   secondaryButtonText: {
-    color: "#007AFF",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },

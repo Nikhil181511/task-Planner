@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Tasks collection - users can only access their own tasks
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update, delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+    
+    // Notes collection - users can only access their own notes
+    match /notes/{noteId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update, delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+    
+    // Reviews collection - allow public read/write
+    match /reviews/{review} {
+      // Allow anyone to read reviews
+      allow read: if true;
+      
+      // Allow anyone to create reviews with required fields and validation
+      allow create: if request.resource.data.keys().hasAll(['name', 'type', 'rating', 'comment', 'created_at'])
+                    && request.resource.data.name is string
+                    && request.resource.data.type in ['student', 'parent']
+                    && request.resource.data.rating is number
+                    && request.resource.data.rating >= 1 
+                    && request.resource.data.rating <= 5
+                    && request.resource.data.comment is string;
+      
+      // Allow anyone to delete reviews (password protected in frontend)
+      allow delete: if true;
+      
+      // Prevent updates to existing reviews
+      allow update: if false;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

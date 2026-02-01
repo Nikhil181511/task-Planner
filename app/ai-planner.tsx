@@ -4,10 +4,6 @@ import { taskService } from "@/services/taskService";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useRouter } from "expo-router";
-import {
-  ExpoSpeechRecognitionModule,
-  useSpeechRecognitionEvent,
-} from "expo-speech-recognition";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -29,32 +25,8 @@ export default function AIPlanner() {
   const [plan, setPlan] = useState<AITaskPlan | null>(null);
   const [editing, setEditing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recognizing, setRecognizing] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
-
-  // Voice recognition events
-  useSpeechRecognitionEvent("start", () => setRecognizing(true));
-  useSpeechRecognitionEvent("end", () => {
-    setRecognizing(false);
-    setIsRecording(false);
-  });
-  useSpeechRecognitionEvent("result", (event) => {
-    const transcript = event.results[0]?.transcript;
-    if (transcript) {
-      setInput((prev) => prev + (prev ? " " : "") + transcript);
-    }
-  });
-  useSpeechRecognitionEvent("error", (event) => {
-    console.error("Speech recognition error:", event.error);
-    setRecognizing(false);
-    setIsRecording(false);
-    Alert.alert(
-      "Voice Input Error",
-      "Failed to recognize speech. Please try again.",
-    );
-  });
 
   useEffect(() => {
     // Subscribe to network status
@@ -152,37 +124,6 @@ export default function AIPlanner() {
     }
   };
 
-  const handleVoiceInput = async () => {
-    try {
-      const hasPermission =
-        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      if (!hasPermission.granted) {
-        Alert.alert(
-          "Permission Denied",
-          "Please grant microphone permissions to use voice input.",
-        );
-        return;
-      }
-
-      if (isRecording) {
-        ExpoSpeechRecognitionModule.stop();
-        setIsRecording(false);
-      } else {
-        setIsRecording(true);
-        ExpoSpeechRecognitionModule.start({
-          lang: "en-US",
-          interimResults: true,
-          maxAlternatives: 1,
-          continuous: false,
-        });
-      }
-    } catch (error) {
-      console.error("Voice input error:", error);
-      Alert.alert("Error", "Failed to start voice input");
-      setIsRecording(false);
-    }
-  };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -222,60 +163,27 @@ export default function AIPlanner() {
               editable={!loading}
             />
 
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[
-                  styles.voiceButton,
-                  isRecording && styles.voiceButtonActive,
-                ]}
-                onPress={handleVoiceInput}
-                disabled={loading}
-              >
-                <Ionicons
-                  name={isRecording ? "stop-circle" : "mic"}
-                  size={24}
-                  color={isRecording ? colors.error : colors.primary}
-                />
-                <Text
-                  style={[
-                    styles.voiceButtonText,
-                    isRecording && styles.voiceButtonTextActive,
-                  ]}
-                >
-                  {isRecording ? "Stop" : "Voice"}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.analyzeButton,
-                  (loading || !isOnline) && styles.buttonDisabled,
-                ]}
-                onPress={handleAnalyze}
-                disabled={loading || !isOnline}
-              >
-                {loading ? (
-                  <ActivityIndicator color={colors.background} />
-                ) : (
-                  <>
-                    <Ionicons
-                      name="sparkles"
-                      size={20}
-                      color={colors.background}
-                    />
-                    <Text style={styles.buttonText}>Analyze with AI</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {recognizing && (
-              <View style={styles.listeningIndicator}>
-                <View style={styles.pulse} />
-                <Text style={styles.listeningText}>Listening...</Text>
-              </View>
-            )}
+            <TouchableOpacity
+              style={[
+                styles.button,
+                (loading || !isOnline) && styles.buttonDisabled,
+              ]}
+              onPress={handleAnalyze}
+              disabled={loading || !isOnline}
+            >
+              {loading ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <>
+                  <Ionicons
+                    name="sparkles"
+                    size={20}
+                    color={colors.background}
+                  />
+                  <Text style={styles.buttonText}>Analyze with AI</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.resultContainer}>

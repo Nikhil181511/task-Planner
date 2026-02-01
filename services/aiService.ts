@@ -34,7 +34,7 @@ export const aiService = {
     try {
       const existingTasksInfo =
         existingTasks.length > 0
-          ? `\n\nEXISTING TASKS (avoid conflicts):\n${existingTasks.map((t) => `- ${t.scheduledFor}: "${t.title}" (${t.estimatedTime}, Priority: ${t.priority})`).join("\n")}`
+          ? `\n\nEXISTING TASKS (DO NOT DUPLICATE - avoid creating same tasks again):\n${existingTasks.map((t) => `- ${t.scheduledFor} at ${t.estimatedTime}: "${t.title}" (Priority: ${t.priority})`).join("\n")}`
           : "";
 
       const prompt = `You are a productivity AI assistant. Analyze the following unstructured text and convert it into a structured task plan.
@@ -50,7 +50,7 @@ IMPORTANT: Return ONLY valid JSON in this exact format (no markdown, no code blo
     {
       "task": "Task name/description",
       "priority": "High | Medium | Low",
-      "estimatedTime": "e.g. 45 mins, 2 hours, 1 day",
+      "estimatedTime": "HH:MM format (e.g., 09:00, 14:30, 18:45)",
       "scheduledFor": "YYYY-MM-DD",
       "notes": "Any additional context or notes"
     }
@@ -61,12 +61,14 @@ IMPORTANT: Return ONLY valid JSON in this exact format (no markdown, no code blo
 Rules:
 1. Break down the input into realistic, actionable tasks
 2. Assign appropriate priority (High/Medium/Low)
-3. Estimate realistic time for each task
+3. Use 24-hour time format (HH:MM) for estimatedTime field - this is the START TIME not duration
 4. Suggest a reasonable schedule starting from today (${new Date().toISOString().split("T")[0]})
-5. AVOID scheduling conflicts with existing tasks - choose different times/dates
-6. If conflicts are unavoidable, list them in the "conflicts" array
-7. Tasks should be specific and achievable
-8. Return ONLY the JSON object, nothing else`;
+5. DO NOT CREATE DUPLICATE TASKS - if a task already exists in the existing tasks list, skip it
+6. AVOID scheduling conflicts with existing tasks - choose different times/dates
+7. If conflicts are unavoidable, list them in the "conflicts" array
+8. Tasks should be specific and achievable
+9. Space out tasks realistically (don't schedule everything back-to-back)
+10. Return ONLY the JSON object, nothing else`;
 
       const completion = await openrouter.chat.completions.create({
         model: "openai/gpt-4o-mini",

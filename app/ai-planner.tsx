@@ -4,6 +4,10 @@ import { taskService } from "@/services/taskService";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useRouter } from "expo-router";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,8 +29,32 @@ export default function AIPlanner() {
   const [plan, setPlan] = useState<AITaskPlan | null>(null);
   const [editing, setEditing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognizing, setRecognizing] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+
+  // Voice recognition events
+  useSpeechRecognitionEvent("start", () => setRecognizing(true));
+  useSpeechRecognitionEvent("end", () => {
+    setRecognizing(false);
+    setIsRecording(false);
+  });
+  useSpeechRecognitionEvent("result", (event) => {
+    const transcript = event.results[0]?.transcript;
+    if (transcript) {
+      setInput((prev) => prev + (prev ? " " : "") + transcript);
+    }
+  });
+  useSpeechRecognitionEvent("error", (event) => {
+    console.error("Speech recognition error:", event.error);
+    setRecognizing(false);
+    setIsRecording(false);
+    Alert.alert(
+      "Voice Input Error",
+      "Failed to recognize speech. Please try again.",
+    );
+  });
 
   useEffect(() => {
     // Subscribe to network status
@@ -124,6 +152,37 @@ export default function AIPlanner() {
     }
   };
 
+  const handleVoiceInput = async () => {
+    try {
+      const hasPermission =
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      if (!hasPermission.granted) {
+        Alert.alert(
+          "Permission Denied",
+          "Please grant microphone permissions to use voice input.",
+        );
+        return;
+      }
+
+      if (isRecording) {
+        ExpoSpeechRecognitionModule.stop();
+        setIsRecording(false);
+      } else {
+        setIsRecording(true);
+        ExpoSpeechRecognitionModule.start({
+          lang: "en-US",
+          interimResults: true,
+          maxAlternatives: 1,
+          continuous: false,
+        });
+      }
+    } catch (error) {
+      console.error("Voice input error:", error);
+      Alert.alert("Error", "Failed to start voice input");
+      setIsRecording(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -162,27 +221,61 @@ export default function AIPlanner() {
               textAlignVertical="top"
               editable={!loading}
             />
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (loading || !isOnline) && styles.buttonDisabled,
-              ]}
-              onPress={handleAnalyze}
-              disabled={loading || !isOnline}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.background} />
-              ) : (
-                <>
-                  <Ionicons
-                    name="sparkles"
-                    size={20}
-                    color={colors.background}
-                  />
-                  <Text style={styles.buttonText}>Analyze with AI</Text>
-                </>
-              )}
-            </TouchableOpacity>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.voiceButton,
+                  isRecording && styles.voiceButtonActive,
+                ]}
+                onPress={handleVoiceInput}
+                disabled={loading}
+              >
+                <Ionicons
+                  name={isRecording ? "stop-circle" : "mic"}
+                  size={24}
+                  color={isRecording ? colors.error : colors.primary}
+                />
+                <Text
+                  style={[
+                    styles.voiceButtonText,
+                    isRecording && styles.voiceButtonTextActive,
+                  ]}
+                >
+                  {isRecording ? "Stop" : "Voice"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.analyzeButton,
+                  (loading || !isOnline) && styles.buttonDisabled,
+                ]}
+                onPress={handleAnalyze}
+                disabled={loading || !isOnline}
+              >
+                {loading ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="sparkles"
+                      size={20}
+                      color={colors.background}
+                    />
+                    <Text style={styles.buttonText}>Analyze with AI</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {recognizing && (
+              <View style={styles.listeningIndicator}>
+                <View style={styles.pulse} />
+                <Text style={styles.listeningText}>Listening...</Text>
+              </View>
+            )}
           </View>
         ) : (
           <View style={styles.resultContainer}>
@@ -471,6 +564,59 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: colors.text,
     fontSize: 16,
+    fontWeight: "600",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+  },
+  voiceButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    minWidth: 100,
+  },
+  voiceButtonActive: {
+    backgroundColor: "rgba(255, 59, 48, 0.1)",
+    borderColor: colors.error,
+  },
+  voiceButtonText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  voiceButtonTextActive: {
+    color: colors.error,
+  },
+  analyzeButton: {
+    flex: 1,
+  },
+  listeningIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+  },
+  pulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  listeningText: {
+    color: colors.primary,
+    fontSize: 14,
     fontWeight: "600",
   },
 });

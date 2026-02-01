@@ -27,24 +27,46 @@ export default function AIPlanner() {
   const [editing, setEditing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
+  const [voiceAvailable, setVoiceAvailable] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    Voice.onSpeechStart = () => setIsRecording(true);
-    Voice.onSpeechEnd = () => setIsRecording(false);
-    Voice.onSpeechResults = (e) => {
-      if (e.value && e.value[0]) {
-        setInput((prev) => prev + (prev ? " " : "") + e.value[0]);
+    // Check if Voice module is available (only in production builds)
+    const initVoice = async () => {
+      try {
+        if (Voice && Voice.isAvailable) {
+          const available = await Voice.isAvailable();
+          setVoiceAvailable(available);
+
+          if (available) {
+            Voice.onSpeechStart = () => setIsRecording(true);
+            Voice.onSpeechEnd = () => setIsRecording(false);
+            Voice.onSpeechResults = (e) => {
+              if (e.value && e.value[0]) {
+                setInput((prev) => prev + (prev ? " " : "") + e.value[0]);
+              }
+            };
+            Voice.onSpeechError = (e) => {
+              console.error("Speech error:", e);
+              setIsRecording(false);
+            };
+          }
+        }
+      } catch (error) {
+        console.log("Voice not available:", error);
+        setVoiceAvailable(false);
       }
     };
-    Voice.onSpeechError = (e) => {
-      console.error("Speech error:", e);
-      setIsRecording(false);
-    };
+
+    initVoice();
 
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
+      if (voiceAvailable && Voice) {
+        Voice.destroy()
+          .then(Voice.removeAllListeners)
+          .catch(() => {});
+      }
     };
   }, []);
 
@@ -145,6 +167,14 @@ export default function AIPlanner() {
   };
 
   const handleVoiceInput = async () => {
+    if (!voiceAvailable) {
+      Alert.alert(
+        "Voice Not Available",
+        "Voice recognition is only available in the production build (APK). Build with 'eas build' to use this feature."
+      );
+      return;
+    }
+
     try {
       if (isRecording) {
         await Voice.stop();
@@ -156,7 +186,7 @@ export default function AIPlanner() {
       console.error("Voice error:", error);
       Alert.alert(
         "Voice Input Error",
-        "Failed to start voice recognition. This feature requires the production build.",
+        "Voice recognition is only available in the production build. Build with 'eas build' to use this feature.",
       );
     }
   };

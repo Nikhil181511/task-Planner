@@ -63,6 +63,16 @@ export const taskService = {
       };
       tasks.push(newTask);
       await saveAllTasksToStorage(tasks);
+
+      // Schedule notification if task is not completed
+      if (!newTask.completed) {
+        await notificationService.scheduleTaskReminder(
+          newTask.id!,
+          newTask.title,
+          newTask.scheduledFor,
+        );
+      }
+
       return newTask.id!;
     } catch (error: any) {
       throw new Error(error.message);
@@ -84,6 +94,17 @@ export const taskService = {
       }));
       existingTasks.push(...newTasks);
       await saveAllTasksToStorage(existingTasks);
+
+      // Schedule notifications for all new tasks
+      for (const task of newTasks) {
+        if (!task.completed) {
+          await notificationService.scheduleTaskReminder(
+            task.id!,
+            task.title,
+            task.scheduledFor,
+          );
+        }
+      }
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -148,6 +169,19 @@ export const taskService = {
 
       allTasks[taskIndex].completed = completed;
       await saveAllTasksToStorage(allTasks);
+
+      // Cancel notification if task is completed
+      if (completed) {
+        await notificationService.cancelTaskNotification(taskId);
+      } else {
+        // Reschedule if uncompleted
+        const task = allTasks[taskIndex];
+        await notificationService.scheduleTaskReminder(
+          task.id!,
+          task.title,
+          task.scheduledFor,
+        );
+      }
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -162,6 +196,16 @@ export const taskService = {
 
       allTasks[taskIndex] = { ...allTasks[taskIndex], ...updates };
       await saveAllTasksToStorage(allTasks);
+
+      // Reschedule notification if title or time changed and task is not completed
+      const updatedTask = allTasks[taskIndex];
+      if (!updatedTask.completed && (updates.title || updates.scheduledFor)) {
+        await notificationService.scheduleTaskReminder(
+          updatedTask.id!,
+          updatedTask.title,
+          updatedTask.scheduledFor,
+        );
+      }
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -170,6 +214,9 @@ export const taskService = {
   // Delete task
   async deleteTask(taskId: string): Promise<void> {
     try {
+      // Cancel notification before deleting
+      await notificationService.cancelTaskNotification(taskId);
+
       const allTasks = await getAllTasksFromStorage();
       const filteredTasks = allTasks.filter((task) => task.id !== taskId);
       await saveAllTasksToStorage(filteredTasks);

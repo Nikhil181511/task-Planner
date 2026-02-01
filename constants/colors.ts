@@ -1,12 +1,12 @@
 export const colors = {
   // Dark theme
   background: "#312b2b89",
-  surface: "#857f7f76",
+  surface: "#3a303076",
   surfaceLight: "#3b3b409d",
   border: "#4e4e54",
 
   // Text
-  text: "#0b8db8",
+  text: "#00bfff",
   textSecondary: "#b1b7cc",
   textTertiary: "#f8f8ff",
 

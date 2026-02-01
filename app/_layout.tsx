@@ -1,41 +1,34 @@
-import {
-    DarkTheme,
-    DefaultTheme,
-    ThemeProvider,
-} from "@react-navigation/native";
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import "react-native-reanimated";
-
+// app/_layout.tsx
 import { AuthProvider } from "@/context/AuthContext";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-
-export const unstable_settings = {
-  anchor: "(tabs)",
-};
+import { notificationService } from "@/services/notificationService";
+import { Stack } from "expo-router";
+import React, { useEffect } from "react";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    // Request notification permissions on app startup
+    const setupNotifications = async () => {
+      try {
+        await notificationService.requestPermissions();
+      } catch (error) {
+        console.log("Notification setup error:", error);
+        // Don't crash the app if notifications fail
+      }
+    };
+    
+    setupNotifications();
+  }, []);
 
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="ai-planner"
-            options={{ title: "AI Task Planner" }}
-          />
-          <Stack.Screen name="tasks" options={{ title: "My Tasks" }} />
-          <Stack.Screen name="notes" options={{ title: "Quick Notes" }} />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ title: "Sign In" }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="ai-planner" options={{ title: "AI Planner" }} />
+        <Stack.Screen name="tasks" options={{ title: "My Tasks" }} />
+        <Stack.Screen name="notes" options={{ title: "Quick Notes" }} />
+      </Stack>
     </AuthProvider>
   );
 }

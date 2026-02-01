@@ -2,8 +2,9 @@ import { useAuth } from "@/context/AuthContext";
 import { aiService, AITaskPlan } from "@/services/aiService";
 import { taskService } from "@/services/taskService";
 import { Ionicons } from "@expo/vector-icons";
+import NetInfo from "@react-native-community/netinfo";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -23,8 +24,18 @@ export default function AIPlanner() {
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<AITaskPlan | null>(null);
   const [editing, setEditing] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const { user } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    // Subscribe to network status
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsOnline(state.isConnected ?? false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleAnalyze = async () => {
     if (!input.trim()) {
@@ -34,6 +45,14 @@ export default function AIPlanner() {
 
     if (!user) {
       Alert.alert("Error", "You must be logged in");
+      return;
+    }
+
+    if (!isOnline) {
+      Alert.alert(
+        "No Internet Connection",
+        "AI features require an internet connection. Please check your network and try again.",
+      );
       return;
     }
 
@@ -118,9 +137,24 @@ export default function AIPlanner() {
               Paste or type your messy ideas, and AI will organize them into
               structured tasks
             </Text>
+
+            {!isOnline && (
+              <View style={styles.offlineNotice}>
+                <Ionicons
+                  name="cloud-offline-outline"
+                  size={20}
+                  color={colors.warning}
+                />
+                <Text style={styles.offlineText}>
+                  Offline - AI features unavailable
+                </Text>
+              </View>
+            )}
+
             <TextInput
               style={styles.textArea}
               placeholder="Example: Need to organize birthday party next week, buy groceries, finish project report..."
+              placeholderTextColor={colors.textTertiary}
               value={input}
               onChangeText={setInput}
               multiline
@@ -129,9 +163,12 @@ export default function AIPlanner() {
               editable={!loading}
             />
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[
+                styles.button,
+                (loading || !isOnline) && styles.buttonDisabled,
+              ]}
               onPress={handleAnalyze}
-              disabled={loading}
+              disabled={loading || !isOnline}
             >
               {loading ? (
                 <ActivityIndicator color={colors.background} />
@@ -246,6 +283,22 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     padding: 20,
+  },
+  offlineNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(255, 214, 10, 0.1)",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  offlineText: {
+    fontSize: 14,
+    color: colors.warning,
+    fontWeight: "600",
   },
   title: {
     fontSize: 28,

@@ -1,14 +1,28 @@
 # SmartPlan AI 🚀
 
-A personal productivity mobile app built with React Native (Expo) that uses AI to convert unstructured text into organized, trackable tasks.
+A personal productivity mobile app built with React Native (Expo) that uses AI to convert unstructured text into organized, trackable tasks. **Works fully offline** with local storage!
 
 ## Features
 
 ✨ **AI Task Planner** - Convert messy ideas into structured tasks using OpenRouter AI  
 📋 **Task Management** - View, track, and complete tasks with priorities and schedules  
 📝 **Quick Notes** - Save quick thoughts and ideas like a digital notebook  
-🔐 **User Authentication** - Secure login with Firebase (email/password + anonymous)  
-☁️ **Cloud Sync** - All data stored in Firebase Firestore
+🔐 **User Authentication** - Secure login with Firebase (email/password)  
+📱 **Offline First** - All data stored locally using AsyncStorage - works without internet!  
+🌐 **AI Online Only** - AI features require internet connection, everything else works offline  
+🎨 **Dark Minimalist UI** - Professional black and white theme with Ionicons
+
+## Offline Capabilities
+
+The app is designed to work **completely offline** for all core features:
+
+- ✅ **Tasks**: Create, edit, delete, and complete tasks offline
+- ✅ **Notes**: Create, edit, and delete notes offline
+- ✅ **Auto-cleanup**: Old completed tasks are automatically cleaned up
+- ✅ **Persistent Login**: Stay logged in across app restarts
+- 🌐 **AI Features**: Require internet connection (automatic detection & alerts)
+
+See [OFFLINE_MODE.md](OFFLINE_MODE.md) for complete offline documentation.
 
 ## Quick Start
 
@@ -28,8 +42,8 @@ cp .env.example .env
 
 You'll need:
 
-- **Firebase credentials** (from Firebase Console)
-- **OpenRouter API key** (from OpenRouter.ai)
+- **Firebase credentials** (from Firebase Console) - Only for authentication
+- **OpenRouter API key** (from OpenRouter.ai) - Only for AI features
 
 See [SETUP.md](SETUP.md) for detailed setup instructions.
 

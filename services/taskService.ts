@@ -1,15 +1,6 @@
-import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    query,
-    Timestamp,
-    updateDoc,
-    where,
-} from "firebase/firestore";
-import { db } from "../config/firebase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const TASKS_STORAGE_KEY = "@smartplan_tasks";
 
 export interface Task {
   id?: string;
@@ -23,6 +14,39 @@ export interface Task {
   createdAt: Date;
 }
 
+// Helper function to generate unique IDs
+const generateId = () =>
+  `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+// Helper to get all tasks from storage
+const getAllTasksFromStorage = async (): Promise<Task[]> => {
+  try {
+    const tasksJson = await AsyncStorage.getItem(TASKS_STORAGE_KEY);
+    if (!tasksJson) return [];
+
+    const tasks = JSON.parse(tasksJson);
+    // Convert date strings back to Date objects
+    return tasks.map((task: any) => ({
+      ...task,
+      scheduledFor: new Date(task.scheduledFor),
+      createdAt: new Date(task.createdAt),
+    }));
+  } catch (error) {
+    console.error("Error reading tasks from storage:", error);
+    return [];
+  }
+};
+
+// Helper to save all tasks to storage
+const saveAllTasksToStorage = async (tasks: Task[]): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+  } catch (error) {
+    console.error("Error saving tasks to storage:", error);
+    throw error;
+  }
+};
+
 export const taskService = {
   // Create new task
   async createTask(
@@ -30,13 +54,16 @@ export const taskService = {
     taskData: Omit<Task, "id" | "userId" | "createdAt">,
   ): Promise<string> {
     try {
-      const docRef = await addDoc(collection(db, "tasks"), {
+      const tasks = await getAllTasksFromStorage();
+      const newTask: Task = {
+        id: generateId(),
         userId,
         ...taskData,
-        scheduledFor: Timestamp.fromDate(taskData.scheduledFor),
-        createdAt: Timestamp.now(),
-      });
-      return docRef.id;
+        createdAt: new Date(),
+      };
+      tasks.push(newTask);
+      await saveAllTasksToStorage(tasks);
+      return newTask.id!;
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -48,8 +75,15 @@ export const taskService = {
     tasks: Omit<Task, "id" | "userId" | "createdAt">[],
   ): Promise<void> {
     try {
-      const promises = tasks.map((task) => this.createTask(userId, task));
-      await Promise.all(promises);
+      const existingTasks = await getAllTasksFromStorage();
+      const newTasks: Task[] = tasks.map((task) => ({
+        id: generateId(),
+        userId,
+        ...task,
+        createdAt: new Date(),
+      }));
+      existingTasks.push(...newTasks);
+      await saveAllTasksToStorage(existingTasks);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -61,21 +95,11 @@ export const taskService = {
       // First, cleanup old completed tasks
       await this.cleanupOldCompletedTasks(userId);
 
-      // Simple query without orderBy to avoid needing a composite index
-      const q = query(collection(db, "tasks"), where("userId", "==", userId));
-      const querySnapshot = await getDocs(q);
-      const tasks = querySnapshot.docs.map(
-        (doc) =>
-          ({
-            id: doc.id,
-            ...doc.data(),
-            scheduledFor: doc.data().scheduledFor.toDate(),
-            createdAt: doc.data().createdAt.toDate(),
-          }) as Task,
-      );
+      const allTasks = await getAllTasksFromStorage();
+      const userTasks = allTasks.filter((task) => task.userId === userId);
 
-      // Sort in memory instead of in the database
-      return tasks.sort(
+      // Sort by scheduled date
+      return userTasks.sort(
         (a, b) => a.scheduledFor.getTime() - b.scheduledFor.getTime(),
       );
     } catch (error: any) {
@@ -90,25 +114,21 @@ export const taskService = {
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
 
-      const q = query(
-        collection(db, "tasks"),
-        where("userId", "==", userId),
-        where("completed", "==", true),
-      );
+      const allTasks = await getAllTasksFromStorage();
+      const tasksToKeep = allTasks.filter((task) => {
+        // Keep tasks that are:
+        // 1. Not this user's tasks, OR
+        // 2. Not completed, OR
+        // 3. Scheduled for today or later
+        if (task.userId !== userId) return true;
+        if (!task.completed) return true;
+        return task.scheduledFor >= startOfToday;
+      });
 
-      const querySnapshot = await getDocs(q);
-
-      // Delete tasks that are completed and scheduled before today
-      const deletePromises = querySnapshot.docs
-        .filter((doc) => {
-          const scheduledFor = doc.data().scheduledFor.toDate();
-          return scheduledFor < startOfToday;
-        })
-        .map((doc) => deleteDoc(doc.ref));
-
-      if (deletePromises.length > 0) {
-        await Promise.all(deletePromises);
-        console.log(`Cleaned up ${deletePromises.length} old completed tasks`);
+      const deletedCount = allTasks.length - tasksToKeep.length;
+      if (deletedCount > 0) {
+        await saveAllTasksToStorage(tasksToKeep);
+        console.log(`Cleaned up ${deletedCount} old completed tasks`);
       }
     } catch (error: any) {
       // Don't throw error for cleanup, just log it
@@ -122,8 +142,12 @@ export const taskService = {
     completed: boolean,
   ): Promise<void> {
     try {
-      const taskRef = doc(db, "tasks", taskId);
-      await updateDoc(taskRef, { completed });
+      const allTasks = await getAllTasksFromStorage();
+      const taskIndex = allTasks.findIndex((task) => task.id === taskId);
+      if (taskIndex === -1) throw new Error("Task not found");
+
+      allTasks[taskIndex].completed = completed;
+      await saveAllTasksToStorage(allTasks);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -132,12 +156,12 @@ export const taskService = {
   // Update task
   async updateTask(taskId: string, updates: Partial<Task>): Promise<void> {
     try {
-      const taskRef = doc(db, "tasks", taskId);
-      const updateData: any = { ...updates };
-      if (updates.scheduledFor) {
-        updateData.scheduledFor = Timestamp.fromDate(updates.scheduledFor);
-      }
-      await updateDoc(taskRef, updateData);
+      const allTasks = await getAllTasksFromStorage();
+      const taskIndex = allTasks.findIndex((task) => task.id === taskId);
+      if (taskIndex === -1) throw new Error("Task not found");
+
+      allTasks[taskIndex] = { ...allTasks[taskIndex], ...updates };
+      await saveAllTasksToStorage(allTasks);
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -146,7 +170,9 @@ export const taskService = {
   // Delete task
   async deleteTask(taskId: string): Promise<void> {
     try {
-      await deleteDoc(doc(db, "tasks", taskId));
+      const allTasks = await getAllTasksFromStorage();
+      const filteredTasks = allTasks.filter((task) => task.id !== taskId);
+      await saveAllTasksToStorage(filteredTasks);
     } catch (error: any) {
       throw new Error(error.message);
     }

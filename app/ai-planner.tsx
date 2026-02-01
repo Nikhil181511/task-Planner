@@ -3,6 +3,7 @@ import { aiService, AITaskPlan } from "@/services/aiService";
 import { taskService } from "@/services/taskService";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
+import Voice from "@react-native-voice/voice";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -25,8 +26,27 @@ export default function AIPlanner() {
   const [plan, setPlan] = useState<AITaskPlan | null>(null);
   const [editing, setEditing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    Voice.onSpeechStart = () => setIsRecording(true);
+    Voice.onSpeechEnd = () => setIsRecording(false);
+    Voice.onSpeechResults = (e) => {
+      if (e.value && e.value[0]) {
+        setInput((prev) => prev + (prev ? " " : "") + e.value[0]);
+      }
+    };
+    Voice.onSpeechError = (e) => {
+      console.error("Speech error:", e);
+      setIsRecording(false);
+    };
+
+    return () => {
+      Voice.destroy().then(Voice.removeAllListeners);
+    };
+  }, []);
 
   useEffect(() => {
     // Subscribe to network status
@@ -124,6 +144,23 @@ export default function AIPlanner() {
     }
   };
 
+  const handleVoiceInput = async () => {
+    try {
+      if (isRecording) {
+        await Voice.stop();
+        setIsRecording(false);
+      } else {
+        await Voice.start("en-US");
+      }
+    } catch (error) {
+      console.error("Voice error:", error);
+      Alert.alert(
+        "Voice Input Error",
+        "Failed to start voice recognition. This feature requires the production build.",
+      );
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -163,27 +200,45 @@ export default function AIPlanner() {
               editable={!loading}
             />
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (loading || !isOnline) && styles.buttonDisabled,
-              ]}
-              onPress={handleAnalyze}
-              disabled={loading || !isOnline}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.background} />
-              ) : (
-                <>
-                  <Ionicons
-                    name="sparkles"
-                    size={20}
-                    color={colors.background}
-                  />
-                  <Text style={styles.buttonText}>Analyze with AI</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.voiceButton,
+                  isRecording && styles.voiceButtonActive,
+                ]}
+                onPress={handleVoiceInput}
+                disabled={loading}
+              >
+                <Ionicons
+                  name={isRecording ? "stop-circle" : "mic"}
+                  size={24}
+                  color={isRecording ? colors.error : colors.primary}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.analyzeButton,
+                  (loading || !isOnline) && styles.buttonDisabled,
+                ]}
+                onPress={handleAnalyze}
+                disabled={loading || !isOnline}
+              >
+                {loading ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="sparkles"
+                      size={20}
+                      color={colors.background}
+                    />
+                    <Text style={styles.buttonText}>Analyze with AI</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           <View style={styles.resultContainer}>

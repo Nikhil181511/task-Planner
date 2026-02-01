@@ -15,7 +15,7 @@ export default function RootLayout() {
         // Don't crash the app if notifications fail
       }
     };
-    
+
     setupNotifications();
   }, []);
 

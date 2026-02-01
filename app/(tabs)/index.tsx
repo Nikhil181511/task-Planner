@@ -64,7 +64,7 @@ export default function HomeScreen() {
           onPress={() => router.push("/ai-planner")}
         >
           <View style={styles.cardIcon}>
-            <Ionicons name="bulb-outline" size={32} color={colors.background} />
+            <Ionicons name="bulb-outline" size={32} color={colors.text} />
           </View>
           <View style={styles.cardContent}>
             <Text style={styles.cardTitle}>AI Task Planner</Text>
@@ -72,7 +72,7 @@ export default function HomeScreen() {
               Transform ideas into structured tasks
             </Text>
           </View>
-          <Ionicons name="arrow-forward" size={24} color={colors.background} />
+          <Ionicons name="arrow-forward" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -103,12 +103,12 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.cardContent}>
-            <Text style={styles.secondaryCardTitle}>Quick Notes</Text>
+            <Text style={styles.cardTitle}>Quick Notes</Text>
             <Text style={[styles.cardDescription, styles.secondaryDescription]}>
               Save quick thoughts and ideas
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+          <Ionicons name="chevron-forward" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
     </ScrollView>
